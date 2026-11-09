@@ -1,466 +1,114 @@
+"""FairCredit Streamlit application: educational assessment and research views."""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
 import streamlit as st
-import pandas as pd
-import numpy as np
-import joblib
-import matplotlib.pyplot as plt
+
+ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
+
+from faircredit import load_german_credit, train_primary_model  # noqa: E402
+from faircredit_app.pages import assessment, fairness_insights, home, model_insights, reports, what_if  # noqa: E402
+
+st.set_page_config(page_title="FairCredit | Credit assessment", page_icon="FC", layout="wide")
+st.markdown("""
+<style>
+:root { --ink:#111827; --muted:#344054; --blue:#1d4ed8; --blue-dark:#1e40af; --red:#b42318; --line:#d0d5dd; --paper:#f7f9fc; --white:#fff; }
+.stApp { background:var(--paper); color:var(--ink); }
+html, body { font-family:Inter,"Segoe UI",sans-serif; color:var(--ink); }
+.stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"], [data-testid="stSidebar"] { color:var(--ink); }
+.block-container { max-width:1080px; padding:4.25rem 2rem 3rem; }
+[data-testid="stSidebar"] { min-width:250px; max-width:250px; background:#fff; border-right:1px solid var(--line); }
+[data-testid="stSidebar"] > div { padding:1.35rem 1rem 1rem; }
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p { color:var(--muted); }
+[data-testid="stSidebar"] [role="radiogroup"] label { color:var(--ink); font-weight:550; }
+[data-testid="stSidebar"] input[type="radio"] { accent-color:var(--blue); }
+.fc-brand { display:flex; align-items:center; gap:.65rem; color:var(--ink); font-weight:750; font-size:1.3rem; letter-spacing:-.035em; margin:.15rem 0 .3rem; }
+.fc-brand-symbol { display:inline-flex; align-items:center; justify-content:center; width:2rem; height:2rem; color:#fff; background:var(--blue); border-radius:.6rem; font-size:.83rem; letter-spacing:0; position:relative; }
+.fc-brand-symbol:after { content:""; position:absolute; width:.42rem; height:.42rem; background:var(--red); border:2px solid #fff; border-radius:50%; right:-.12rem; top:-.12rem; }
+h1,h2,h3 { color:var(--ink) !important; letter-spacing:-.025em; }
+h1 { font-weight:740; font-size:2.2rem; margin-bottom:.35rem; }
+h2 { font-weight:700; font-size:1.45rem; }
+h3 { font-weight:680; font-size:1.1rem; }
+p, li, label, small, [data-testid="stMarkdownContainer"], [data-testid="stMarkdownContainer"] p,
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p,
+[data-testid="stWidgetLabel"], [data-testid="stWidgetLabel"] p { color:var(--muted); line-height:1.6; }
+[data-testid="stWidgetLabel"], [data-testid="stWidgetLabel"] p { color:var(--ink); font-weight:550; }
+[data-testid="stMetric"] { min-height:108px; border:1px solid var(--line); border-top:3px solid var(--blue); background:var(--white); padding:1rem 1.1rem; border-radius:12px; box-shadow:0 3px 12px rgba(16,24,40,.045); }
+[data-testid="stMetricLabel"] { color:var(--muted) !important; font-size:.85rem; }
+[data-testid="stMetricValue"] { color:var(--ink) !important; font-weight:740; }
+[data-testid="stForm"] { background:#fff; border:1px solid var(--line); border-radius:16px; padding:1.35rem 1.45rem; box-shadow:0 5px 22px rgba(16,24,40,.04); }
+[data-testid="stNumberInput"] input, [data-testid="stTextInput"] input,
+[data-testid="stSelectbox"] [role="combobox"] { color:var(--ink) !important; background:#fff; }
+[data-testid="stSelectbox"] [role="combobox"] { min-height:2.8rem; }
+[data-testid="stNumberInput"] input::placeholder, [data-testid="stTextInput"] input::placeholder { color:#475467 !important; opacity:1; }
+[data-baseweb="popover"] *, [role="option"] { color:var(--ink); }
+button[kind="primary"] { background:var(--blue); border:1px solid var(--blue); border-radius:9px; font-weight:650; min-height:2.8rem; }
+button[kind="primary"]:hover { background:var(--blue-dark); border-color:var(--blue-dark); }
+button[kind="primary"] p { color:#fff !important; }
+button:focus-visible, a:focus-visible, input:focus-visible, [role="combobox"]:focus-visible { outline:3px solid #84adff !important; outline-offset:2px; }
+a { color:var(--blue); }
+a:hover { color:var(--red); }
+.fc-kicker { color:var(--red) !important; font-weight:750; letter-spacing:.12em; text-transform:uppercase; font-size:.72rem; margin:0 0 .4rem; }
+.fc-intro { max-width:760px; margin-bottom:1.2rem; }
+.fc-section { border-bottom:1px solid var(--line); border-left:3px solid var(--blue); padding:.45rem 0 .6rem .7rem; margin:1.1rem 0 .65rem; color:var(--ink); font-weight:720; font-size:1rem; }
+.fc-note { color:var(--muted); font-size:.88rem; margin-top:-.2rem; margin-bottom:.8rem; }
+div[data-testid="stDataFrame"] { border:1px solid var(--line); border-radius:9px; overflow:hidden; }
+.fc-table-wrap { max-width:100%; overflow-x:auto; border:1px solid var(--line); border-radius:10px; background:#fff; margin:.25rem 0 .8rem; }
+.fc-table { width:100%; border-collapse:collapse; color:var(--ink); font-size:.9rem; }
+.fc-table th { background:#eaf0ff; color:#101828; font-weight:700; text-align:left; white-space:nowrap; }
+.fc-table th,.fc-table td { padding:.62rem .75rem; border-bottom:1px solid #eaecf0; }
+.fc-table tr:last-child td { border-bottom:0; }
+.fc-table td { color:var(--ink); }
+@media (max-width: 760px) {
+  .block-container { padding:3.75rem 1rem 2rem; }
+  h1 { font-size:1.8rem; }
+  [data-testid="stForm"] { padding:1rem; border-radius:14px; }
+  [data-testid="stSidebar"] { min-width:unset; max-width:unset; }
+}
+</style>
+""", unsafe_allow_html=True)
 
 
-# --------------------------------------------------
-# PAGE CONFIG
-# --------------------------------------------------
+@st.cache_data
+def get_data():
+    return load_german_credit()
 
-st.set_page_config(
-    page_title="CreditRisk AI",
-    page_icon="💳",
-    layout="wide"
-)
-
-
-# --------------------------------------------------
-# LOAD MODEL
-# --------------------------------------------------
 
 @st.cache_resource
-def load_model():
-    return joblib.load("credit_risk_model.pkl")
+def get_training():
+    return train_primary_model(get_data())
 
 
-model = load_model()
+pages = {
+    "Assessment": assessment.render,
+    "Overview": home.render,
+    "What-if simulator": what_if.render,
+    "Fairness insights": fairness_insights.render,
+    "Model insights": model_insights.render,
+    "Report": reports.render,
+}
+st.sidebar.markdown('<div class="fc-brand"><span class="fc-brand-symbol">FC</span>FairCredit</div>', unsafe_allow_html=True)
+st.sidebar.caption("Credit risk assessment")
+selected_page = st.sidebar.radio("Navigate", list(pages), index=0, label_visibility="collapsed")
 
+try:
+    data = get_data()
+    training = get_training()
+except Exception as exc:
+    st.error(f"FairCredit could not load its bundled dataset or fit the demonstration model: {exc}")
+    st.info("Check that credit-risk-ai/data/german.data is present and install requirements.txt.")
+    st.stop()
 
-# --------------------------------------------------
-# TITLE
-# --------------------------------------------------
-
-st.title("💳 CreditRisk AI")
-st.subheader("Explainable Credit Risk Prediction")
-
-st.write(
-    "Enter the applicant's financial details below to estimate "
-    "their credit risk."
-)
+context = {"data": data, "training": training, "experiment_root": ROOT / "reports" / "experiments"}
+try:
+    pages[selected_page](context)
+except Exception as exc:
+    st.error(f"This view could not be loaded: {exc}")
+    st.caption("Review the local data and dependency setup, then restart the application.")
 
 st.divider()
-
-
-# --------------------------------------------------
-# SIDEBAR
-# --------------------------------------------------
-
-st.sidebar.header("Applicant Details")
-
-
-# Account status
-account_status = st.sidebar.selectbox(
-    "Checking Account Status",
-    ["A11", "A12", "A13", "A14"]
-)
-
-# Loan duration
-duration = st.sidebar.slider(
-    "Loan Duration (months)",
-    min_value=4,
-    max_value=72,
-    value=24
-)
-
-# Credit history
-credit_history = st.sidebar.selectbox(
-    "Credit History",
-    ["A30", "A31", "A32", "A33", "A34"]
-)
-
-# Purpose
-purpose = st.sidebar.selectbox(
-    "Purpose",
-    [
-        "A40", "A41", "A42", "A43", "A44",
-        "A45", "A46", "A47", "A48", "A49", "A410"
-    ]
-)
-
-# Credit amount
-credit_amount = st.sidebar.number_input(
-    "Credit Amount",
-    min_value=250,
-    max_value=20000,
-    value=2500,
-    step=100
-)
-
-# Savings
-savings = st.sidebar.selectbox(
-    "Savings Account",
-    ["A61", "A62", "A63", "A64", "A65"]
-)
-
-# Employment
-employment = st.sidebar.selectbox(
-    "Employment Duration",
-    ["A71", "A72", "A73", "A74", "A75"]
-)
-
-# Installment rate
-installment_rate = st.sidebar.slider(
-    "Installment Rate (% of income)",
-    1,
-    4,
-    2
-)
-
-# Personal status
-personal_status = st.sidebar.selectbox(
-    "Personal Status",
-    ["A91", "A92", "A93", "A94"]
-)
-
-# Other debtors
-other_debtors = st.sidebar.selectbox(
-    "Other Debtors",
-    ["A101", "A102", "A103"]
-)
-
-# Property
-property_type = st.sidebar.selectbox(
-    "Property",
-    ["A121", "A122", "A123", "A124"]
-)
-
-# Other installment plans
-other_installment_plans = st.sidebar.selectbox(
-    "Other Installment Plans",
-    ["A141", "A142", "A143"]
-)
-
-# Housing
-housing = st.sidebar.selectbox(
-    "Housing",
-    ["A151", "A152", "A153"]
-)
-
-# Telephone
-telephone = st.sidebar.selectbox(
-    "Telephone",
-    ["A191", "A192"]
-)
-
-# Residence
-residence = st.sidebar.slider(
-    "Years at Current Residence",
-    1,
-    4,
-    2
-)
-
-# Age
-age = st.sidebar.slider(
-    "Age",
-    18,
-    75,
-    30
-)
-
-# Existing credits
-existing_credits = st.sidebar.slider(
-    "Number of Existing Credits",
-    1,
-    4,
-    1
-)
-
-# Job
-job = st.sidebar.selectbox(
-    "Job Type",
-    ["A171", "A172", "A173", "A174"]
-)
-
-# Dependents
-dependents = st.sidebar.slider(
-    "Number of Dependents",
-    1,
-    2,
-    1
-)
-
-
-# Foreign worker
-foreign_worker = st.sidebar.selectbox(
-    "Foreign Worker",
-    ["A201", "A202"]
-)
-
-
-# --------------------------------------------------
-# CREATE INPUT DATA
-# --------------------------------------------------
-
-input_data = pd.DataFrame({
-    "checking_status": [account_status],
-    "duration": [duration],
-    "credit_history": [credit_history],
-    "purpose": [purpose],
-    "credit_amount": [credit_amount],
-    "savings_status": [savings],
-    "employment": [employment],
-    "installment_rate": [installment_rate],
-    "personal_status": [personal_status],
-    "other_debtors": [other_debtors],
-    "residence_since": [residence],
-    "property": [property_type],
-    "age": [age],
-    "other_installment_plans": [other_installment_plans],
-    "housing": [housing],
-    "existing_credits": [existing_credits],
-    "job": [job],
-    "num_dependents": [dependents],
-    "telephone": [telephone],
-    "foreign_worker": [foreign_worker]
-})
-
-
-# --------------------------------------------------
-# FEATURE ENGINEERING
-# --------------------------------------------------
-
-input_data["credit_to_age_ratio"] = (
-    input_data["credit_amount"] / input_data["age"]
-)
-
-input_data["duration_to_age_ratio"] = (
-    input_data["duration"] / input_data["age"]
-)
-
-input_data["monthly_credit_burden"] = (
-    input_data["credit_amount"] / input_data["duration"]
-)
-
-
-# --------------------------------------------------
-# PREDICTION
-# --------------------------------------------------
-
-if st.sidebar.button("Predict Credit Risk", type="primary"):
-
-    prediction = model.predict(input_data)[0]
-
-    probabilities = model.predict_proba(input_data)[0]
-
-    bad_probability = probabilities[1]
-    good_probability = probabilities[0]
-
-    # Risk score
-    risk_score = 100 - (bad_probability * 100)
-
-    # Risk category
-    if bad_probability < 0.30:
-        risk_category = "Low Risk"
-    elif bad_probability < 0.60:
-        risk_category = "Moderate Risk"
-    else:
-        risk_category = "High Risk"
-
-
-    # --------------------------------------------------
-    # RESULTS
-    # --------------------------------------------------
-
-    st.header("Prediction Results")
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.metric(
-            "Credit Risk Score",
-            f"{risk_score:.1f}/100"
-        )
-
-    with col2:
-        st.metric(
-            "Bad Credit Probability",
-            f"{bad_probability * 100:.1f}%"
-        )
-
-    with col3:
-        st.metric(
-            "Risk Category",
-            risk_category
-        )
-
-
-    st.divider()
-
-
-    # --------------------------------------------------
-    # PROBABILITY CHART
-    # --------------------------------------------------
-
-    st.subheader("Prediction Probability")
-
-    probability_df = pd.DataFrame({
-        "Category": ["Good Credit", "Bad Credit"],
-        "Probability": [
-            good_probability,
-            bad_probability
-        ]
-    })
-
-    fig, ax = plt.subplots()
-
-    ax.bar(
-        probability_df["Category"],
-        probability_df["Probability"]
-    )
-
-    ax.set_ylim(0, 1)
-
-    ax.set_ylabel("Probability")
-
-    ax.set_title("Credit Classification Probability")
-
-    st.pyplot(fig)
-
-
-    # --------------------------------------------------
-    # APPLICANT PROFILE
-    # --------------------------------------------------
-
-    st.subheader("Applicant Profile")
-
-    profile_col1, profile_col2 = st.columns(2)
-
-    with profile_col1:
-
-        st.write(f"**Age:** {age}")
-
-        st.write(
-            f"**Credit Amount:** {credit_amount}"
-        )
-
-        st.write(
-            f"**Loan Duration:** {duration} months"
-        )
-
-        st.write(
-            f"**Installment Rate:** {installment_rate}"
-        )
-
-    with profile_col2:
-
-        st.write(
-            f"**Existing Credits:** {existing_credits}"
-        )
-
-        st.write(
-            f"**Dependents:** {dependents}"
-        )
-
-        st.write(
-            f"**Residence Duration:** {residence} years"
-        )
-
-
-    # --------------------------------------------------
-    # INTERPRETATION
-    # --------------------------------------------------
-
-    st.subheader("Model Interpretation")
-
-    if bad_probability >= 0.60:
-
-        st.error(
-            "The model estimates a relatively high probability "
-            "of bad credit classification."
-        )
-
-    elif bad_probability >= 0.30:
-
-        st.warning(
-            "The model estimates a moderate level of credit risk."
-        )
-
-    else:
-
-        st.success(
-            "The model estimates a relatively low probability "
-            "of bad credit classification."
-        )
-
-
-    # --------------------------------------------------
-    # WHAT-IF ANALYSIS
-    # --------------------------------------------------
-
-    st.divider()
-
-    st.subheader("🔍 What-If Analysis")
-
-    st.write(
-        "Change the credit amount below to see how the model's "
-        "risk probability changes."
-    )
-
-    new_credit_amount = st.slider(
-        "What-if Credit Amount",
-        min_value=250,
-        max_value=20000,
-        value=int(credit_amount),
-        step=100
-    )
-
-
-    what_if_data = input_data.copy()
-
-    what_if_data["credit_amount"] = new_credit_amount
-
-    what_if_data["credit_to_age_ratio"] = (
-        new_credit_amount / age
-    )
-
-    what_if_data["monthly_credit_burden"] = (
-        new_credit_amount / duration
-    )
-
-    what_if_probability = model.predict_proba(
-        what_if_data
-    )[0][1]
-
-    what_if_score = 100 - (
-        what_if_probability * 100
-    )
-
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        st.metric(
-            "Original Risk Probability",
-            f"{bad_probability * 100:.1f}%"
-        )
-
-    with col2:
-
-        st.metric(
-            "What-If Risk Probability",
-            f"{what_if_probability * 100:.1f}%",
-            delta=f"{(what_if_probability - bad_probability) * 100:.1f}%"
-        )
-
-
-    st.write(
-        f"**What-if Credit Risk Score:** "
-        f"{what_if_score:.1f}/100"
-    )
-
-
-# --------------------------------------------------
-# FOOTER
-# --------------------------------------------------
-
-st.divider()
-
-st.caption(
-    "CreditRisk AI is an experimental machine-learning project. "
-    "The generated score is model-derived and is not an official "
-    "credit score or financial decision."
-)
+st.caption("Historical-data estimate for information only. Not a bank decision or approval guarantee.")
