@@ -6,6 +6,10 @@ FairCredit is an educational Streamlit tool for exploring a credit-risk model, g
 
 > **Public demo privacy:** use hypothetical examples only. Do not enter real applicant or sensitive financial information; the live app processes submitted inputs on its hosting server.
 
+## Live demo
+
+Open the [FairCredit app](https://codealphacreditriskai-summerinternship.streamlit.app/). The public app is hosted on Streamlit Community Cloud from this repository's `main` branch, using `app.py` and Python 3.12.
+
 ## Start
 
 Use Python 3.10–3.12. The preserved original model was serialized with scikit-learn 1.6.1. The app now trains its active applicant model from the bundled data rather than loading that old artifact, because the old feature set included demographic attributes.

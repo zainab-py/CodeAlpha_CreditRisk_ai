@@ -4,6 +4,10 @@ An educational Streamlit application for exploring historical credit-risk model 
 
 > **Educational and research use only.** FairCredit does not make actual bank credit decisions, guarantee loan approval, provide financial advice, or replace professional financial assessment. Model outputs reflect historical data patterns and are not causal explanations.
 
+## Live app
+
+Try the [FairCredit public demo](https://codealphacreditriskai-summerinternship.streamlit.app/). Use hypothetical examples only—do not enter real applicant or sensitive financial information. The hosted app processes submitted inputs on its server.
+
 ## Run locally
 
 Use Python 3.10–3.12. The saved model was serialized with scikit-learn 1.6.1; use the pinned versions in `credit-risk-ai/requirements.txt` to avoid pickle incompatibilities.
@@ -17,16 +21,9 @@ streamlit run credit-risk-ai/app.py
 
 The inspected Statlog German Credit sample is bundled for offline use. The applicant experience uses hypothetical financial fields; demographic comparisons are available only as aggregate research views. See the [dataset and preprocessing record](credit-risk-ai/DATASET.md) for source, encodings, data checks, sensitive attributes, and feature engineering.
 
-## Public demo deployment
+## Deployment
 
-The app is configured for [Streamlit Community Cloud](https://share.streamlit.io/):
-
-1. Push this repository to GitHub.
-2. In Streamlit Community Cloud, create an app from this repository's `main` branch.
-3. Set the main file path to `credit-risk-ai/app.py` and the Python version to 3.12.
-4. Deploy. The app dependencies are in `credit-risk-ai/requirements.txt`; no secrets are required.
-
-This is a public educational demo, not a lending service. Enter hypothetical examples only—never submit real applicant or other sensitive financial information. The app does not intentionally persist submitted profiles, but the live service processes them on its hosting server.
+The live app is hosted on [Streamlit Community Cloud](https://share.streamlit.io/) from the `main` branch, using `credit-risk-ai/app.py` and Python 3.12. Dependencies are in `credit-risk-ai/requirements.txt`; no secrets are required.
 
 See [METHODOLOGY.md](credit-risk-ai/METHODOLOGY.md) for score limitations, what-if behavior, and PDF report details. Tests are in credit-risk-ai/tests; install credit-risk-ai/requirements-dev.txt before running them. The original analysis notebook retains a separate historical SHAP analysis; it is not loaded by the app.
 
