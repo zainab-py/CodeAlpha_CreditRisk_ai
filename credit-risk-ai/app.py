@@ -42,10 +42,54 @@ p, li, label, small, [data-testid="stMarkdownContainer"], [data-testid="stMarkdo
 [data-testid="stMetricValue"] { color:var(--ink) !important; font-weight:740; }
 [data-testid="stForm"] { background:#fff; border:1px solid var(--line); border-radius:16px; padding:1.35rem 1.45rem; box-shadow:0 5px 22px rgba(16,24,40,.04); }
 [data-testid="stNumberInput"] input, [data-testid="stTextInput"] input,
-[data-testid="stSelectbox"] [role="combobox"] { color:var(--ink) !important; background:#fff; }
+[data-testid="stTextArea"] textarea {
+  color:var(--ink) !important;
+  -webkit-text-fill-color:var(--ink);
+  background:#fff !important;
+  opacity:1;
+}
+[data-testid="stSelectbox"] [data-baseweb="select"] {
+  color:var(--ink) !important;
+  background:#fff !important;
+}
+[data-testid="stSelectbox"] [data-baseweb="select"] > div {
+  color:var(--ink) !important;
+  background:#fff !important;
+}
+[data-testid="stSelectbox"] [data-baseweb="select"] > div * {
+  color:var(--ink) !important;
+  -webkit-text-fill-color:var(--ink);
+  background:transparent !important;
+}
+[data-testid="stSelectbox"] [data-baseweb="select"] div[value],
+[data-testid="stSelectbox"] [role="combobox"] {
+  color:var(--ink) !important;
+  -webkit-text-fill-color:var(--ink);
+  background:transparent !important;
+}
 [data-testid="stSelectbox"] [role="combobox"] { min-height:2.8rem; }
 [data-testid="stNumberInput"] input::placeholder, [data-testid="stTextInput"] input::placeholder { color:#475467 !important; opacity:1; }
-[data-baseweb="popover"] *, [role="option"] { color:var(--ink); }
+[data-baseweb="popover"], [data-baseweb="menu"], [role="listbox"] {
+  color:var(--ink) !important;
+  background:#fff !important;
+}
+[data-baseweb="popover"] [role="option"], [role="listbox"] [role="option"], [role="option"] {
+  color:var(--ink) !important;
+  -webkit-text-fill-color:var(--ink);
+  background:#fff !important;
+}
+[data-baseweb="popover"] [role="option"] *, [role="listbox"] [role="option"] *, [role="option"] * {
+  color:var(--ink) !important;
+  -webkit-text-fill-color:var(--ink);
+  background:transparent !important;
+}
+[data-baseweb="popover"] [role="option"]:hover,
+[role="listbox"] [role="option"]:hover,
+[role="option"]:hover,
+[role="option"][aria-selected="true"] {
+  color:var(--ink) !important;
+  background:#eaf0ff !important;
+}
 button[kind="primary"] { background:var(--blue); border:1px solid var(--blue); border-radius:9px; font-weight:650; min-height:2.8rem; }
 button[kind="primary"]:hover { background:var(--blue-dark); border-color:var(--blue-dark); }
 button[kind="primary"] p { color:#fff !important; }
